@@ -1,0 +1,508 @@
+import unittest
+import sqlite3
+import os 
+import threading
+import time
+import asyncio
+import aiohttp
+import random
+
+# 1. Write a Python unit test program to check if a given number is prime or not.
+def zad1UNIT():
+    def is_prime(num):
+        if num <= 1:
+            return False
+        for i in range(2, int(num ** 0.5) + 1):
+            if num % i == 0:
+                return False
+        return True
+    
+    class TestPrime(unittest.TestCase):
+        def test_prime(self):
+            self.assertTrue(is_prime(11))
+            self.assertFalse(is_prime(4))
+            self.assertTrue(is_prime(13))
+            self.assertFalse(is_prime(1))
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 2. Write a Python unit test program to check if a list is sorted in ascending order.
+def zad2UNIT():
+    def is_sorted(nums):
+        return nums == sorted(nums)
+    
+    class TestSorted(unittest.TestCase):
+        def test_sorted(self):
+            self.assertTrue(is_sorted([1, 2, 3, 4, 5]))
+            self.assertFalse(is_sorted([5, 1, 4, 2, 3]))
+            self.assertTrue(is_sorted([10, 20, 30, 40]))
+            self.assertFalse(is_sorted([1, 3, 2, 5, 4]))
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 3. Write a Python unit test program that checks if two lists are equal.
+def zad3UNIT():
+    def are_lists_equal(lst1, lst2):
+        return lst1 == lst2
+    
+    class TestListsEqual(unittest.TestCase):
+        def test_lists_equal(self):
+            self.assertTrue(are_lists_equal([1, 2, 3], [1, 2, 3]))
+            self.assertFalse(are_lists_equal([1, 2], [1, 2, 3]))
+            self.assertTrue(are_lists_equal([], []))
+            self.assertFalse(are_lists_equal([1, 2, 3], [3, 2, 1]))
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 4. Write a Python unit test program to check if a string is a palindrome.
+def zad4UNIT():
+    def is_palindrome(stri):
+        cleaned_stri = ''
+        for c in stri:
+            if c.isalpha():
+                cleaned_stri += c.lower()
+        return cleaned_stri == cleaned_stri[::-1]
+    
+    class TestPalindrome(unittest.TestCase):
+        def test_palindrome(self):
+            self.assertTrue(is_palindrome("madam"))
+            self.assertTrue(is_palindrome("nurses run"))
+            self.assertFalse(is_palindrome("hello"))
+            self.assertTrue(is_palindrome("A man, a plan, a canal, Panama"))
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 5. Write a Python unit test program to check if a file exists in a specified directory.
+def zad5UNIT():
+    def file_exists(directory, filename):
+        return os.path.isfile(os.path.join(directory, filename))
+    
+    class TestFileExists(unittest.TestCase):
+        def test_file_exists(self):
+            self.assertTrue(file_exists('.', 'example.txt'))  
+            self.assertFalse(file_exists('.', 'nonexistent.txt'))
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 6. Write a Python unit test that checks if a function handles floating-point calculations accurately.
+def zad6UNIT():
+    def add_floats(a, b):
+        return a + b
+    
+    class TestFloatCalc(unittest.TestCase):
+        def test_add_floats(self):
+            self.assertAlmostEqual(add_floats(0.1, 0.2), 0.3, places=7)
+            self.assertAlmostEqual(add_floats(1.2345, 2.3456), 3.5801, places=4)
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 7. Write a Python unit test program to check if a function handles multi-threading correctly.
+def zad7UNIT():
+    class Counter:
+        def __init__(self):
+            self.count = 0
+            self.lock = threading.Lock()
+        
+        def increment(self):
+            with self.lock:
+                self.count += 1
+    
+    class TestMultiThreading(unittest.TestCase):
+        def test_multithreading(self):
+            counter = Counter()
+            threads = [threading.Thread(target=counter.increment) for _ in range(1000)]
+            
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            
+            self.assertEqual(counter.count, 1000)
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# 8. Write a Python unit test program to check if a MySQL database connection is successful.
+def zad8UNIT():
+    def is_db_connection_successful(database):
+        try:
+            connection = sqlite3.connect(database)
+            connection.close()
+            return True
+        except sqlite3.Error:
+            return False
+
+    class TestDBConnection(unittest.TestCase):
+        def test_db_connection(self):
+            database = ':memory:'  
+            self.assertTrue(is_db_connection_successful(database))
+            self.assertFalse(is_db_connection_successful('nonexistent.db'))
+
+    unittest.main(argv=[''], verbosity=2, exit=False)
+# 9. Write a Python unit test program to check if a database query returns the expected results.
+def zad9UNIT():
+    def fetch_data_from_db(query, database):
+        try:
+            connection = sqlite3.connect(database)
+            cursor = connection.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+            connection.close()
+            return result
+        except sqlite3.Error as e:
+            print(f"Error: {e}")
+            return None
+
+    class TestDBQuery(unittest.TestCase):
+        def test_db_query(self):
+            database = ':memory:'  # In-memory database for testing
+            connection = sqlite3.connect(database)
+            cursor = connection.cursor()
+            cursor.execute('CREATE TABLE test_table (id INTEGER, name TEXT, age INTEGER)')
+            cursor.execute('INSERT INTO test_table (id, name, age) VALUES (1, "John Doe", 30)')
+            cursor.execute('INSERT INTO test_table (id, name, age) VALUES (2, "Jane Smith", 25)')
+            connection.commit()
+            connection.close()
+
+            query = 'SELECT * FROM test_table'
+            expected_result = [
+                (1, 'John Doe', 30),
+                (2, 'Jane Smith', 25)
+            ]
+
+            result = fetch_data_from_db(query, database)
+            self.assertEqual(result, expected_result)
+
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+
+# 10. Write a Python unit test program to check if a function correctly parses and validates input data.
+def zad10UNIT():
+    def parse_and_validate_data(data):
+        if not isinstance(data, dict):
+            raise ValueError("Input data must be a dictionary.")
+        
+        if 'name' not in data or not isinstance(data['name'], str) or not data['name']:
+            raise ValueError("Invalid or missing 'name'.")
+        
+        if 'age' not in data or not isinstance(data['age'], int) or data['age'] <= 0:
+            raise ValueError("Invalid or missing 'age'.")
+        
+        if 'email' not in data or not isinstance(data['email'], str) or '@' not in data['email']:
+            raise ValueError("Invalid or missing 'email'.")
+        
+        return {
+            'name': data['name'].strip(),
+            'age': data['age'],
+            'email': data['email'].strip().lower()
+        }
+
+    class TestParseAndValidateData(unittest.TestCase):
+        def test_valid_data(self):
+            data = {
+                'name': 'John Doe',
+                'age': 30,
+                'email': 'john.doe@example.com'
+            }
+            expected_result = {
+                'name': 'John Doe',
+                'age': 30,
+                'email': 'john.doe@example.com'
+            }
+            self.assertEqual(parse_and_validate_data(data), expected_result)
+
+        def test_missing_name(self):
+            data = {
+                'age': 30,
+                'email': 'john.doe@example.com'
+            }
+            with self.assertRaises(ValueError) as context:
+                parse_and_validate_data(data)
+            self.assertEqual(str(context.exception), "Invalid or missing 'name'.")
+
+        def test_invalid_age(self):
+            data = {
+                'name': 'John Doe',
+                'age': -1,
+                'email': 'john.doe@example.com'
+            }
+            with self.assertRaises(ValueError) as context:
+                parse_and_validate_data(data)
+            self.assertEqual(str(context.exception), "Invalid or missing 'age'.")
+
+        def test_invalid_email(self):
+            data = {
+                'name': 'John Doe',
+                'age': 30,
+                'email': 'johndoeexample.com'
+            }
+            with self.assertRaises(ValueError) as context:
+                parse_and_validate_data(data)
+            self.assertEqual(str(context.exception), "Invalid or missing 'email'.")
+
+        def test_invalid_input_type(self):
+            data = "invalid input"
+            with self.assertRaises(ValueError) as context:
+                parse_and_validate_data(data)
+            self.assertEqual(str(context.exception), "Input data must be a dictionary.")
+    
+    unittest.main(argv=[''], verbosity=2, exit=False)
+
+# Run all the unit test functions
+zad1UNIT()
+zad2UNIT()
+zad3UNIT()
+zad4UNIT()
+zad5UNIT()
+zad6UNIT()
+zad7UNIT()
+zad8UNIT()
+zad9UNIT()
+zad10UNIT()
+
+
+
+
+def zad1Exception():
+    try:
+        num = 10
+        result = num / 0
+    except ZeroDivisionError as e:
+        print(f"Error: {e}")
+
+
+
+def zad2Exception():
+    try:
+        user_input = input("Please enter an integer: ")
+        num = int(user_input)
+        print(f"You entered: {num}")
+    except ValueError as e:
+        print(f"Error: {e}")
+
+
+
+def zad3Exception():
+    try:
+        with open('nonexistent_file.txt', 'r') as file:
+            content = file.read()
+            print(content)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+
+
+def zad4Exception():
+    try:
+        num1 = float(input("Enter the first number: "))
+        num2 = float(input("Enter the second number: "))
+        print(f"The sum is: {num1 + num2}")
+    except ValueError as e:
+        print(f"Error: {e}")
+
+
+
+def zad5Exception():
+    try:
+        with open('/root/protected_file.txt', 'r') as file:
+            content = file.read()
+            print(content)
+    except PermissionError as e:
+        print(f"Error: {e}")
+
+
+
+def zad6Exception():
+    try:
+        my_list = [1, 2, 3, 4, 5]
+        index = 10
+        print(my_list[index])
+    except IndexError as e:
+        print(f"Error: {e}")
+
+
+
+def zad7Exception():
+    try:
+        user_input = input("Please enter a number: ")
+        num = float(user_input)
+        print(f"You entered: {num}")
+    except KeyboardInterrupt:
+        print("\nInput cancelled by user.")
+
+
+
+def zad8Exception():
+    try:
+        num1 = 10
+        num2 = 0
+        result = num1 / num2
+    except ArithmeticError as e:
+        print(f"Error: {e}")
+
+
+
+
+def zad9Exception():
+    try:
+        with open('example.txt', 'r', encoding='utf-8') as file:
+            content = file.read()
+            print(content)
+    except UnicodeDecodeError as e:
+        print(f"Error: {e}")
+
+
+
+def zad10Exception():
+    try:
+        my_list = [1, 2, 3, 4, 5]
+        my_list.append(6)  # Valid operation
+        my_list.apend(7)   # Invalid operation (typo)
+    except AttributeError as e:
+        print(f"Error: {e}")
+
+zad1Exception()
+zad2Exception()
+zad3Exception()
+zad4Exception()
+zad5Exception()
+zad6Exception()
+zad7Exception()
+zad8Exception()
+zad9Exception()
+zad10Exception()
+
+
+
+
+def zad1ASY():
+    async def print_message():
+        await asyncio.sleep(2)
+        print("Python Exercises!")
+
+    asyncio.run(print_message())
+
+def zad2ASY():
+    async def display_name(name, delay):
+        await asyncio.sleep(delay)
+        print(name)
+
+    async def main():
+        await asyncio.gather(
+            display_name("First", 1),
+            display_name("Second", 2),
+            display_name("Third", 3)
+        )
+
+    asyncio.run(main())
+
+def zad3ASY():
+    async def print_numbers():
+        for i in range(1, 8):
+            print(i)
+            await asyncio.sleep(1)
+
+    asyncio.run(print_numbers())
+
+def zad4ASY():
+    async def fetch(url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                return await response.text()
+
+    async def main():
+        url1 = "http://example.com"
+        url2 = "http://example.org"
+        data1, data2 = await asyncio.gather(fetch(url1), fetch(url2))
+        print(data1[:100])  # Print the first 100 characters of each response
+        print(data2[:100])
+
+    asyncio.run(main())
+
+def zad5ASY():
+    async def async_task(name, delay):
+        await asyncio.sleep(delay)
+        return f"Task {name} completed after {delay} seconds"
+
+    async def main():
+        start_time = time.time()
+        results = await asyncio.gather(
+            async_task("A", 1),
+            async_task("B", 2),
+            async_task("C", 3)
+        )
+        end_time = time.time()
+        for result in results:
+            print(result)
+        print(f"All tasks completed in {end_time - start_time} seconds")
+
+    asyncio.run(main())
+
+def zad6ASY():
+    async def time_consuming_task():
+        print("Task started, it will take 5 seconds to complete")
+        try:
+            await asyncio.sleep(5)
+        except asyncio.CancelledError:
+            print("Task was cancelled")
+            raise
+
+    async def main():
+        task = asyncio.create_task(time_consuming_task())
+        await asyncio.sleep(2)
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            print("Main function caught task cancellation")
+
+    asyncio.run(main())
+
+def zad7ASY():
+    async def long_running_task():
+        print("Task started, it will take 5 seconds to complete")
+        await asyncio.sleep(5)
+        return "Task completed"
+
+    async def main():
+        try:
+            result = await asyncio.wait_for(long_running_task(), timeout=3)
+            print(result)
+        except asyncio.TimeoutError:
+            print("Task timed out")
+
+    asyncio.run(main())
+
+def zad8ASY():
+    async def producer(queue, id):
+        for i in range(5):
+            item = f"item-{i} from producer-{id}"
+            await queue.put(item)
+            print(f"Producer-{id} produced {item}")
+            await asyncio.sleep(random.uniform(0.1, 1.0))
+
+    async def consumer(queue):
+        while True:
+            item = await queue.get()
+            print(f"Consumer consumed {item}")
+            queue.task_done()
+
+    async def main():
+        queue = asyncio.Queue()
+        
+        producers = [asyncio.create_task(producer(queue, i)) for i in range(3)]
+        consumer_task = asyncio.create_task(consumer(queue))
+        
+        await asyncio.gather(*producers)
+        await queue.join()
+        consumer_task.cancel()
+
+    asyncio.run(main())
+
+
+zad1ASY()
+zad2ASY()
+zad3ASY()
+zad4ASY()
+zad5ASY()
+zad6ASY()
+zad7ASY()
+zad8ASY()
